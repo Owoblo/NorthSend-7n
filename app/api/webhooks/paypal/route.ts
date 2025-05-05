@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { supabase } from '@/lib/supabase'
 
+// PayPal webhook handler for processing incoming payments
 export async function POST(req: Request) {
   try {
     const headersList = headers()
