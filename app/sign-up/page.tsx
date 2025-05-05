@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { signUp } from "@/lib/auth"
 
 export default function SignUpPage() {
   const router = useRouter()
@@ -103,13 +104,20 @@ export default function SignUpPage() {
     setIsLoading(true)
 
     try {
-      // This would be replaced with your actual authentication logic
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const { error } = await signUp(
+        formData.email,
+        formData.password,
+        formData.firstName,
+        formData.lastName
+      )
+      
+      if (error) {
+        throw error
+      }
 
-      // Simulate successful sign-up
       router.push("/dashboard")
     } catch (err) {
-      setError("An error occurred during sign-up. Please try again.")
+      setError(err.message || "An error occurred during sign-up. Please try again.")
     } finally {
       setIsLoading(false)
     }

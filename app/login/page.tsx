@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { signIn } from "@/lib/auth"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -73,13 +74,15 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      // This would be replaced with your actual authentication logic
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const { error } = await signIn(formData.email, formData.password)
+      
+      if (error) {
+        throw error
+      }
 
-      // Simulate successful login
       router.push("/dashboard")
     } catch (err) {
-      setError("Invalid email or password. Please try again.")
+      setError(err.message || "Invalid email or password. Please try again.")
     } finally {
       setIsLoading(false)
     }
