@@ -1,12 +1,11 @@
-import { supabase } from '@/lib/supabase'
+import { supabase } from './auth'
 
-export type Wallet = {
+export interface Wallet {
   id: string
   user_id: string
-  currency: 'USD' | 'CAD'
+  currency: string
   balance: number
   created_at: string
-  updated_at: string
 }
 
 export type Transaction = {
@@ -22,91 +21,32 @@ export type Transaction = {
   updated_at: string
 }
 
-export async function getWallets(userId: string): Promise<{ wallets: Wallet[]; error: any }> {
-  try {
-    console.log('Fetching wallets for user:', userId)
-    
-    if (!userId) {
-      console.error('No userId provided to getWallets')
-      return { wallets: [], error: 'No userId provided' }
-    }
-
-    const { data: wallets, error } = await supabase
-      .from('wallets')
-      .select('*')
-      .eq('user_id', userId)
-
-    if (error) {
-      console.error('Supabase error fetching wallets:', error)
-      return { wallets: [], error }
-    }
-
-    console.log('Successfully fetched wallets:', wallets)
-    return { wallets, error: null }
-  } catch (err) {
-    console.error('Unexpected error in getWallets:', err)
-    return { wallets: [], error: err }
-  }
-}
-
-export async function getWalletBalance(userId: string): Promise<Wallet | null> {
-  if (!userId) {
-    console.error('getWalletBalance: No userId provided')
-    return null
-  }
-
-  console.log('Fetching wallet for user:', userId)
-
-  // First try to get existing wallet
-  const { data: existingWallet, error: fetchError } = await supabase
+export async function getWallets(userId: string) {
+  const { data, error } = await supabase
     .from('wallets')
     .select('*')
     .eq('user_id', userId)
+  
+  return { data, error }
+}
+
+export async function getWalletBalance(walletId: string) {
+  const { data, error } = await supabase
+    .from('wallets')
+    .select('balance')
+    .eq('id', walletId)
     .single()
+  
+  return { data, error }
+}
 
-  if (fetchError) {
-    console.error('Error fetching wallet:', {
-      code: fetchError.code,
-      message: fetchError.message,
-      details: fetchError.details,
-      hint: fetchError.hint
-    })
-
-    // If wallet doesn't exist, create a new one
-    if (fetchError.code === 'PGRST116') {
-      console.log('Creating new wallet for user:', userId)
-      
-      const { data: newWallet, error: createError } = await supabase
-        .from('wallets')
-        .insert([
-          {
-            user_id: userId,
-            currency: 'USD',
-            balance: 0
-          }
-        ])
-        .select()
-        .single()
-
-      if (createError) {
-        console.error('Error creating wallet:', {
-          code: createError.code,
-          message: createError.message,
-          details: createError.details,
-          hint: createError.hint
-        })
-        return null
-      }
-
-      console.log('Successfully created new wallet:', newWallet)
-      return newWallet
-    }
-
-    return null
-  }
-
-  console.log('Found existing wallet:', existingWallet)
-  return existingWallet
+export async function updateWalletBalance(walletId: string, newBalance: number) {
+  const { data, error } = await supabase
+    .from('wallets')
+    .update({ balance: newBalance })
+    .eq('id', walletId)
+  
+  return { data, error }
 }
 
 export async function createTransaction(
@@ -151,49 +91,6 @@ export async function createTransaction(
   } catch (err) {
     console.error('Unexpected error in createTransaction:', err)
     return { transaction: null, error: err }
-  }
-}
-
-export async function updateWalletBalance(
-  walletId: string,
-  amount: number
-): Promise<{ wallet: Wallet | null; error: any }> {
-  try {
-    console.log('Updating wallet balance:', { walletId, amount })
-
-    // First get the current wallet
-    const { data: currentWallet, error: fetchError } = await supabase
-      .from('wallets')
-      .select('*')
-      .eq('id', walletId)
-      .single()
-
-    if (fetchError) {
-      console.error('Error fetching current wallet:', fetchError)
-      return { wallet: null, error: fetchError }
-    }
-
-    // Calculate new balance
-    const newBalance = Number(currentWallet.balance) + amount
-
-    // Update wallet balance
-    const { data: updatedWallet, error: updateError } = await supabase
-      .from('wallets')
-      .update({ balance: newBalance, updated_at: new Date().toISOString() })
-      .eq('id', walletId)
-      .select()
-      .single()
-
-    if (updateError) {
-      console.error('Error updating wallet balance:', updateError)
-      return { wallet: null, error: updateError }
-    }
-
-    console.log('Successfully updated wallet balance:', updatedWallet)
-    return { wallet: updatedWallet, error: null }
-  } catch (err) {
-    console.error('Unexpected error in updateWalletBalance:', err)
-    return { wallet: null, error: err }
   }
 }
 
