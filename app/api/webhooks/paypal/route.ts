@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 // PayPal webhook handler for processing incoming payments
 export async function POST(req: Request) {
   try {
-    const headersList = headers()
+    const headersList = await headers()
     const paypalSignature = headersList.get('paypal-transmission-sig')
     
     // Verify webhook signature (you'll need to implement this)
