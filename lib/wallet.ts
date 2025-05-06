@@ -59,4 +59,21 @@ export async function createTransaction(
     .single()
   
   return { data, error }
+}
+
+export async function getRecentTransactions(userId: string) {
+  try {
+    const { data: transactions, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(5)
+
+    if (error) throw error
+    return { transactions, error: null }
+  } catch (error) {
+    console.error('Error fetching transactions:', error)
+    return { transactions: [], error }
+  }
 } 

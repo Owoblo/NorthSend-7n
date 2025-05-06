@@ -26,4 +26,19 @@ export async function getCurrentUser(): Promise<{ user: User | null; error: any 
   } catch (error) {
     return { user: null, error }
   }
+}
+
+export async function signUp(email: string, password: string) {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    })
+
+    if (error) throw error
+    return { data, error: null }
+  } catch (error) {
+    console.error('Error signing up:', error)
+    return { data: null, error }
+  }
 } 
